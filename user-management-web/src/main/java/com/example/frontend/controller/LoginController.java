@@ -1,10 +1,8 @@
 package com.example.frontend.controller;
 
 import com.example.frontend.service.ApiService;
-
-import jakarta.servlet.http.HttpSession;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.AuthorityUtils;
@@ -15,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.concurrent.TimeUnit;
 
 @Controller
 public class LoginController {
@@ -22,18 +21,23 @@ public class LoginController {
     @Autowired
     private ApiService apiService;
 
+    @Autowired
+    private RedisTemplate<String, String> redisTemplate;
+
+    private static final long TOKEN_EXPIRATION_SECONDS = 3600; // 토큰 만료 시간: 1시간
+
     @GetMapping("/login")
     public String login() {
         return "login";
     }
 
     @PostMapping("/login")
-    public String login(@RequestParam String username, @RequestParam String password, Model model, HttpSession session) {
+    public String login(@RequestParam String username, @RequestParam String password, Model model) {
         try {
             String token = apiService.authenticateAndGetToken(username, password); // JWT 요청
             if (token != null) {
-                // 세션에 JWT 저장
-                session.setAttribute("token", token);
+                // Redis에 JWT 저장 (key: username, value: token)
+                redisTemplate.opsForValue().set(username, token, TOKEN_EXPIRATION_SECONDS, TimeUnit.SECONDS);
 
                 // JWT에서 사용자 이름과 권한 추출
                 String extractedUsername = apiService.getUsernameFromToken(token);
@@ -55,9 +59,14 @@ public class LoginController {
             return "login";
         }
     }
+
     @GetMapping("/healthcheck")
     public ResponseEntity<String> healthCheck() {
         return ResponseEntity.ok("Usermanagement Web server is healthy");
     }
 
+    // Redis에서 토큰 가져오기 예제
+    public String getTokenFromRedis(String username) {
+        return redisTemplate.opsForValue().get(username);
+    }
 }

@@ -1,0 +1,64 @@
+package com.example.frontend.controller;
+
+import com.example.frontend.service.ApiService;
+
+import jakarta.servlet.http.HttpSession;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+
+@Controller
+public class HomeController {
+
+    @Autowired
+    private ApiService apiService;
+
+    @GetMapping("/")
+    public String root() {
+        return "redirect:/home"; // Root redirects to /home
+    }
+
+    @GetMapping("/home")
+    public String home(HttpSession session, Model model) {
+        String token = (String) session.getAttribute("token"); // Get JWT from session
+
+        if (token != null) {
+            // Check if token is valid or expired (optional)
+            if (isTokenExpired(token)) {
+                model.addAttribute("error", "Session expired. Please log in again.");
+                return "login"; // Redirect to login page
+            }
+
+            // Extract username and roles from JWT
+            String username = apiService.getUsernameFromToken(token);
+            String roles = apiService.getRole(username);
+
+            model.addAttribute("username", username);
+            model.addAttribute("role", roles);
+        } else {
+            model.addAttribute("error", "User is not logged in.");
+            return "login"; // Redirect to login page if not logged in
+        }
+
+        return "home"; // Render home page
+    }
+
+    @GetMapping("/healthcheck")
+    public ResponseEntity<String> healthCheck() {
+        return ResponseEntity.ok("Partner Web server is healthy"); // Health check message
+    }
+
+    // Optionally, add token expiration check method
+    private boolean isTokenExpired(String token) {
+        // Add logic to check JWT expiration
+        try {
+            // If the token is expired or invalid, return true
+            return apiService.getUsernameFromToken(token) == null;
+        } catch (Exception e) {
+            return true; // Token parsing failed, treat it as expired
+        }
+    }
+}

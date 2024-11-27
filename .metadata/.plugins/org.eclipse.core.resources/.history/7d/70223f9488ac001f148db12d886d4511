@@ -1,0 +1,56 @@
+package com.example.frontend.controller;
+
+import com.example.frontend.service.ApiService;
+
+import jakarta.servlet.http.HttpSession;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.AuthorityUtils;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+@Controller
+public class LoginController {
+
+    @Autowired
+    private ApiService apiService;
+
+    @GetMapping("/login")
+    public String login() {
+        return "login";
+    }
+
+    @PostMapping("/login")
+    public String login(@RequestParam String username, @RequestParam String password, Model model, HttpSession session) {
+        try {
+            String token = apiService.authenticateAndGetToken(username, password); // JWT request
+            if (token != null) {
+                // Store JWT in session
+                session.setAttribute("token", token);
+
+                // Extract username and role from the JWT token
+                String extractedUsername = apiService.getUsernameFromToken(token);
+                String roles = apiService.getRole(extractedUsername); // Use extracted username instead of original username
+
+                // Set authentication information in the SecurityContext
+                SecurityContextHolder.getContext().setAuthentication(
+                    new UsernamePasswordAuthenticationToken(
+                        extractedUsername, null, AuthorityUtils.commaSeparatedStringToAuthorityList(roles)
+                    )
+                );
+                return "redirect:/"; // Redirect to the root (home page)
+            } else {
+                model.addAttribute("error", "Invalid credentials. Please check your username and password.");
+                return "login"; // Return to login page on error
+            }
+        } catch (Exception e) {
+            model.addAttribute("error", "Server error occurred. Please try again later.");
+            return "login"; // Return to login page on exception
+        }
+    }
+}
