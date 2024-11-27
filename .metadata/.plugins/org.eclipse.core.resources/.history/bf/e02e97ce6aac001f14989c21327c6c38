@@ -1,0 +1,12 @@
+server:
+  port: 8080
+
+auth-service:
+  base-url: auth-service.ewuung.click
+
+role-service:
+  base-url: role-service.ewuung.click
+
+spring:
+  data:
+	  redis:

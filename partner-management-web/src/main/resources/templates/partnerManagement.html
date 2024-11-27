@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Partner Management</title>
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+        .content {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 30px;
+            background-color: #ffffff;
+            border: 1px solid #dddddd;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .form-row .col {
+            margin-bottom: 15px;
+        }
+        .table {
+            margin-top: 30px;
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table th, .table td {
+            border: 1px solid #dddddd;
+            padding: 10px;
+            text-align: left;
+        }
+        .table th {
+            background-color: #f1f1f1;
+        }
+        .error {
+            color: red;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <header>
+            <h1>Partner Management</h1>
+        </header>
+
+        <main>
+            <!-- 에러 메시지가 있을 경우 출력 -->
+            <div th:if="${error}" class="error">
+                <p th:text="${error}"></p>
+            </div>
+
+            <!-- 파트너 목록 -->
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Company Name</th>
+                        <th>Emission Year</th>
+                        <th>Carbon Emission</th>
+                        <th>Region</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- 파트너 데이터 렌더링 -->
+                    <tr th:each="partner : ${users}">
+                        <td th:text="${partner.id}"></td>
+                        <td th:text="${partner.companyName}"></td>
+                        <td th:text="${partner.emissionYear}"></td>
+                        <td th:text="${partner.carbonEmission}"></td>
+                        <td th:text="${partner.region}"></td>
+                        <td th:text="${partner.description}"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </main>
+
+        <footer>
+            <p>© 2024 Company Name. All rights reserved.</p>
+        </footer>
+    </div>
+</body>
+</html>

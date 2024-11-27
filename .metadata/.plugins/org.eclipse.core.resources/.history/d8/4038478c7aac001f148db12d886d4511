@@ -1,0 +1,8 @@
+server:
+  port: 8080
+
+auth-service:
+  base-url: http://internal-auth-service-elb-tf-1420328170.ap-northeast-2.elb.amazonaws.com
+
+role-service:
+  base-url: http://internal-role-service-elb-tf-1312481601.ap-northeast-2.elb.amazonaws.com

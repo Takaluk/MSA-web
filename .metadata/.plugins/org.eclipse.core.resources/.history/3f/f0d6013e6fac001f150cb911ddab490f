@@ -1,0 +1,12 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:mariadb://ewunng-carbon-emission-db-instance.c94qc0mioqgi.ap-northeast-2.rds.amazonaws.com:3306/carbon_db
+    username: root
+    password: 1234
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true

@@ -1,0 +1,7 @@
+server:
+  port: 8080
+
+auth-service:
+  base-url: http://localhost:8081
+role-service:
+  base-url: http://localhost:8082

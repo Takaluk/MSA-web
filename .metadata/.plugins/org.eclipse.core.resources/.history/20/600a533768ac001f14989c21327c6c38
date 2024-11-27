@@ -1,0 +1,109 @@
+package com.example.frontend.service;
+
+import java.nio.charset.StandardCharsets;
+import java.security.Key;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+import com.example.frontend.dto.LoginRequest;
+import com.example.frontend.dto.Partner;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
+@Service
+public class ApiService {
+
+    private final WebClient webClient;
+    private static final String SECRET_KEY = "your-secret-key-that-is-at-least-256-bits-long";
+    @Value("${auth-service.base-url}")
+    private String authServiceUrl;
+
+    @Value("${role-service.base-url}")
+    private String roleServiceUrl;
+    @Value("${carbon-emmision-service.base-url}")
+    private String partnerServiceUrl;
+    public ApiService(WebClient.Builder webClientBuilder) {
+        this.webClient = webClientBuilder.build();
+    }
+ // 사용자 인증 및 JWT 요청
+    public String authenticateAndGetToken(String username, String password) {
+        try {
+            return webClient.post()
+                    .uri(authServiceUrl + "/api/auth/authenticate")
+                    .bodyValue(new LoginRequest(username, password))
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block(); // JWT를 반환받음
+        } catch (Exception e) {
+            return null;
+        }
+    }
+ // 공통으로 JWT를 Authorization 헤더에 추가
+    private WebClient getAuthorizedClient(String token) {
+        return WebClient.builder()
+                .defaultHeader("Authorization", "Bearer " + token)
+                .build();
+    }
+
+    private Key getSigningKey() {
+        return Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
+    }
+
+    public String getUsernameFromToken(String token) {
+        Claims claims = Jwts.parserBuilder()
+            .setSigningKey(getSigningKey())
+            .build()
+            .parseClaimsJws(token)
+            .getBody();
+        return claims.getSubject(); // JWT의 subject가 사용자 이름입니다.
+    }
+
+    private String getSecret() {
+        String secretName = "JWT_TOKEN_KEY";
+        Region region = Region.of("ap-northeast-2");
+
+        // Create a Secrets Manager client
+        SecretsManagerClient client = SecretsManagerClient.builder()
+                .region(region)
+                .build();
+
+        GetSecretValueRequest getSecretValueRequest = GetSecretValueRequest.builder()
+                .secretId(secretName)
+                .build();
+
+        try {
+            GetSecretValueResponse getSecretValueResponse = client.getSecretValue(getSecretValueRequest);
+            return getSecretValueResponse.secretString();
+        } catch (Exception e) {
+            // 필요한 예외 처리
+            throw new RuntimeException("Failed to retrieve secret from AWS Secrets Manager", e);
+        }
+    }
+    public Iterable<Partner> getAllPartners() {
+        try {
+            return webClient.get()
+                    .uri(partnerServiceUrl + "/api/partners/carbon")
+                    .retrieve()
+                    .bodyToMono(new ParameterizedTypeReference<Iterable<Partner>>() {})
+                    .block();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+
+    // 사용자 권한 조회 (role-service)
+    public String getRole(String username) {
+        return webClient.get()
+                .uri(roleServiceUrl + "/api/roles/" + username)
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+    }
+}

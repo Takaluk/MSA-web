@@ -1,0 +1,12 @@
+server:
+  port: 8080
+
+auth-service:
+  base-url: auth-service.ewuung.click
+
+role-service:
+  base-url: role-service.ewuung.click
+spring:
+	  redis:
+	    host: clustercfg.team2-redis.ykeerg.apn2.cache.amazonaws.com
+	    port: 6379

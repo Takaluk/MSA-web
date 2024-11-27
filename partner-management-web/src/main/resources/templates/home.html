@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Home</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .content {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #ffffff;
+            border: 1px solid #dddddd;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .header h1 {
+            margin-bottom: 30px;
+        }
+        .btn-primary, .btn-danger {
+            width: 100%;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <div class="header">
+            <h1>
+                <span th:if="${username != null}">Welcome, <span th:text="${username}"></span>!</span>
+                <span th:if="${username == null}">Please log in to access your account.</span>
+            </h1>
+        </div>
+        <div>
+            <span th:if="${username != null}">
+                <p>Your role: <span th:text="${role}"></span></p>
+                <a href="/partnerManagement" class="btn btn-primary"><i class="fas fa-users-cog"></i> Go to Partner Management</a>
+                <form action="/logout" method="post" style="display:inline;">
+                    <button type="submit" class="btn btn-danger"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                </form>
+            </span>
+            <span th:if="${username == null}">
+                <a href="/login" class="btn btn-primary"><i class="fas fa-sign-in-alt"></i> Login</a>
+            </span>
+        </div>
+    </div>
+</body>
+</html>
